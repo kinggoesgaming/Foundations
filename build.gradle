@@ -1,0 +1,215 @@
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.time.LocalDate
+import java.util.function.Function
+
+plugins {
+    id 'eclipse'
+    id 'checkstyle'
+    id 'idea'
+    id 'java-library'
+    id 'maven'
+
+    id 'net.minecrell.licenser' version '0.3'
+    id 'org.spongepowered.plugin' version '0.8.1'
+}
+
+////////////////////////////////////////////////////////////////
+// Java Plugin                                                //
+////////////////////////////////////////////////////////////////
+compileJava {
+    options.fork = true
+}
+
+javadoc {
+    options {
+        addStringOption (
+                'Xdoclint:none',
+                '-quiet'
+        )
+        charSet = 'UTF-8'
+        encoding = 'UTF-8'
+        links
+        links (
+                'http://www.slf4j.org/apidocs/',
+                'https://google.github.io/guava/releases/17.0/api/docs/',
+                'https://google.github.io/guice/api-docs/4.0/javadoc/',
+                'https://zml2008.github.io/configurate/configurate-core/apidocs/',
+                'https://zml2008.github.io/configurate/configurate-hocon/apidocs/',
+                'https://zml2008.github.io/configurate/configurate-gson/apidocs/',
+                'https://zml2008.github.io/configurate/configurate-yaml/apidocs/',
+                'https://flowpowered.com/math/',
+                'https://flowpowered.com/noise/',
+                'http://asm.ow2.org/asm50/javadoc/user/',
+                'https://docs.oracle.com/javase/8/docs/api/',
+                'https://jd.spongepowered.org/6.0.0-SNAPSHOT/'
+        )
+    }
+}
+
+task sources(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocs(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sources
+    archives javadocs
+}
+
+archivesBaseName = (project.name + '-' + project.spongeapi + '-' + project.api + project.stage).replaceAll('-SNAPSHOT', '')
+
+////////////////////////////////////////////////////////////////
+// Maven Plugin                                               //
+////////////////////////////////////////////////////////////////
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: mavenLocal().url)
+            pom.project {
+                inceptionYear project.inception
+                licenses {
+                    license {
+                        name 'MIT'
+                        url 'https://opensource.org/licenses/MIT'
+                        distribution 'repo'
+                    }
+                }
+                organization {
+                    name project.vendor
+                    url project.url
+                }
+                developers {
+                    developer {
+                        id 'kinggoesgaming'
+                        name 'Hunar Roop Kahlon'
+                        email 'hunar.roop@gmail.com'
+                        roles {
+                            role 'lead-developer'
+                        }
+                    }
+                }
+                issueManagement {
+                    system project.gitIssuesName
+                    url project.gitIssuesUrl
+                }
+                scm {
+                    connection project.scmConnection
+                    developerConnection project.scmConnection
+                    url project.gitSource
+                }
+            }
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////
+// Checkstyle Plugin                                               //
+////////////////////////////////////////////////////////////////
+checkstyle {
+    toolVersion = '6.19'
+    configFile = file('gradle/res/checkstyle/config.xml')
+    configProperties = [
+            'baseDir': project.projectDir,
+            'suppressions' : file('gradle/res/checkstyle/suppressions.xml'),
+            'severity' : 'error'
+    ]
+    showViolations = true
+}
+
+///////////////////////////////////////////////////////////////
+// Signing Plugin                                            //
+///////////////////////////////////////////////////////////////
+// Only do signing if local user has PGP setup and
+// user gradle.properties has the following properties
+// private key file
+if (project.hasProperty('signing.keyId') &&
+        project.hasProperty('signing.password') &&
+        project.hasProperty('signing.secretKeyRingFile') &&
+        Files.exists(Paths.get((String)project.property('signing.secretKeyRingFile')))
+) {
+    apply plugin: 'signing'
+
+    signing {
+        sign configurations.archives
+    }
+
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                beforeDeployment {
+                    MavenDeployment deployment -> signing.signPom(deployment)
+                }
+            }
+        }
+    }
+}
+
+///////////////////////////////////////////////////////////////
+// Idea Plugin                                               //
+///////////////////////////////////////////////////////////////
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
+task genIdeaTasks(type: Copy) {
+    group 'Build Setup'
+    description 'Generate run tasks for IntelliJ'
+    from rootProject.file('gradle/res/idea/runconfigs')
+    into rootProject.file('.idea/runConfigurations')
+}
+
+///////////////////////////////////////////////////////////////
+// Eclipse Plugin                                            //
+///////////////////////////////////////////////////////////////
+eclipse {
+    classpath {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
+///////////////////////////////////////////////////////////////
+// License Plugin                                            //
+///////////////////////////////////////////////////////////////
+license {
+    ext {
+        name = project.name
+        vendor = project.vendor
+        url = project.url
+        inception = project.inception
+        present = LocalDate.now().getYear()
+    }
+
+    include '**/*.java'
+    header = file('gradle/res/licenser/HEADER')
+}
+
+///////////////////////////////////////////////////////////////
+// Sponge Plugin                                             //
+///////////////////////////////////////////////////////////////
+sponge {
+    plugin {
+        meta {
+            name=project.pluginName
+            authors=['KingGoesGaming']
+        }
+    }
+}
+
+///////////////////////////////////////////////////////////////
+// Dependencies                                              //
+///////////////////////////////////////////////////////////////
+dependencies {
+    api group: 'org.spongepowered', name: 'spongeapi', version: project.spongeapi
+
+    testImplementation group: 'junit', name: 'junit', version: project.junit
+}
