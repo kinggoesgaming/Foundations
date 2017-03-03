@@ -1,7 +1,6 @@
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.LocalDate
-import java.util.function.Function
 
 plugins {
     id 'eclipse'
@@ -10,6 +9,7 @@ plugins {
     id 'java-library'
     id 'maven'
 
+    id 'net.ellune.blossom' version '1.0.1'
     id 'net.minecrell.licenser' version '0.3'
     id 'org.spongepowered.plugin' version '0.8.1'
 }
@@ -203,6 +203,25 @@ sponge {
             authors=['KingGoesGaming']
         }
     }
+}
+
+///////////////////////////////////////////////////////////////
+// Blossom Plugin                                            //
+///////////////////////////////////////////////////////////////
+static getGitHash() {
+    def process = 'git rev-parse --short HEAD'.execute()
+    process.waitFor()
+    return process.exitValue() ? 'unknown' : process.text.trim()
+}
+
+blossom {
+    def location = 'src/main/java/io/github/pxlpowered/foundations/plugin/PluginMeta.java'
+
+    replaceToken '@API@', project.api, location
+    replaceToken '@DISCORD_URL@', project.discord, location
+    replaceToken '@DOC_URL@', getGitHash(), location
+    replaceToken '@GITHUB_REPO_URL@', project.gitSource, location
+    replaceToken '@GIT_HASH@', getGitHash(), location
 }
 
 ///////////////////////////////////////////////////////////////
