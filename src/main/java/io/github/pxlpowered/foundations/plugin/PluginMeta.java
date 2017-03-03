@@ -87,17 +87,12 @@ public final class PluginMeta {
     /**
      * The documentation site url.
      */
-    public static final String DOC_URL = "@DOC_URL@";
-
-    /**
-     * The pxlpowered organization url.
-     */
-    public static final String GITHUB_URL = "@GITHUB_URL";
+    public static final String DOC_URL = PluginMeta.URL + "/" + PluginMeta.ID;
 
     /**
      * The foundations plugin repository url.
      */
-    public static final String GITHUB_REPO_URL = GITHUB_URL + "/" + PluginMeta.ID;
+    public static final String GITHUB_REPO_URL = "@GITHUB_REPO_URL@";
 
     /**
      * The foundations issues url.
