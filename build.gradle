@@ -62,7 +62,7 @@ artifacts {
     archives javadocs
 }
 
-archivesBaseName = (project.name + '-' + project.spongeapi + '-' + project.api + project.stage).replaceAll('-SNAPSHOT', '')
+archivesBaseName = (project.name + '-' + project.spongeapi + '-' + project.api + "-" + project.stage).replaceAll('-SNAPSHOT', '')
 
 ////////////////////////////////////////////////////////////////
 // Maven Plugin                                               //
